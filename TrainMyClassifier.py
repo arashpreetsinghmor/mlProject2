@@ -33,8 +33,7 @@ def PreProcessing(file_name):
             if target[i][j] == 1:
                 y.append(j+1)
 
-
-    return np.asarray(j)
+    return y
 
 def SVMTraining(XEstimate,XValidate,Parameters,class_labels):
     #clf = svm.SVC(decision_function_shape='ovo',Parameters)
