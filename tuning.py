@@ -99,7 +99,7 @@ def MyCrossValidate(XTrain, Nf, ClassLabels):
     
     kf = KFold(n_splits=Nf)
 
-    ConfMatrix = np.zeros([5, 5], dtype=float)
+    ConfMatrix = np.zeros([6, 6], dtype=float)
     EstConfMatrices = []
     for train_index, test_index in kf.split(XTrain):
 
@@ -118,9 +118,19 @@ def MyCrossValidate(XTrain, Nf, ClassLabels):
 
         l = MyConfusionMatrix(res["Yvalidate"], " ", y_test)
         EstConfMatrices.append(l[0])
-        ConfMatrix += l[0]
+        ConfMatrix += l[2]
         print('accuracy: ' + str(l[1]))
-    print(ConfMatrix/Nf)
+    
+    for i in range(len(ConfMatrix)):
+        l = sum(ConfMatrix[i])
+        if l != 0:
+            for j in range(len(ConfMatrix[i])):
+                ConfMatrix[i][j] /= l
+    TruePositives = np.trace(ConfMatrix)
+    accuracy = TruePositives/len(XTrain)
+    np.savetxt(Parameters + "ConfusionMatrix.csv", ConfMatrix, delimiter = ",")
+    np.savetxt(Parameters + "Accuracy.csv", (accuracy,), delimiter = ",")
+    print(ConfMatrix)
 
 #Tunes the parameters of the classifier for a small data set and sets them to be used by cross validation
 def TuneMyClassifier(Parameters, X_train, X_test, y_train, y_test):
@@ -184,7 +194,7 @@ def TuneMyClassifier(Parameters, X_train, X_test, y_train, y_test):
 
 # Compute confusion matrix using actual labels and predicted labels
 def MyConfusionMatrix(predictedLabels, ClassNames, actualLabels):
-    matrix = np.zeros([np.unique(actualLabels).size, np.unique(actualLabels).size], dtype=int)
+    matrix = np.zeros([6,6], dtype=float)
     correctHits = 0
     for i in range(len(actualLabels)):
         matrix[actualLabels[i] - 1][predictedLabels[i] - 1] += 1
@@ -192,13 +202,19 @@ def MyConfusionMatrix(predictedLabels, ClassNames, actualLabels):
             correctHits += 1
 
     confusion_matrix = matrix[:][:]
+    
+    for i in range(len(matrix)):
+        l = sum(matrix[i])
+        if l != 0:
+            for j in range(len(matrix[i])):
+                matrix[i][j] /= l
 
-    confusion_matrix2 = matrix / matrix.sum(axis=1)[:, None]
+    #confusion_matrix2 = matrix / matrix.sum(axis=1)[:, None]
 
     if doPrint==1:
-        print(confusion_matrix2)
+        print(matrix)
 
-    return (confusion_matrix2, correctHits / len(actualLabels))
+    return (matrix, correctHits / len(actualLabels), confusion_matrix)
 
 def TestMyClassifier(XTest, Parameters, EstParameters):
     Ytest = EstParameters["clf"].predict(XTest)
@@ -243,7 +259,7 @@ if __name__ == '__main__':
     l = []
     t = []
 
-    for x in range(4, 25000, 10):
+    for x in range(4, 25000, 5):
         l.append(x)
     xe = []
     yy = []
@@ -255,22 +271,17 @@ if __name__ == '__main__':
         yy.append(y[i])
         testData.append(reduced_XEstimate[i - 1])
         testLabels.append(y[i - 1])
-        testData.append(reduced_XEstimate[i - 2])
-        testLabels.append(y[i - 2])
-        testData.append(reduced_XEstimate[i - 3])
-        testLabels.append(y[i - 3])
-        testData.append(reduced_XEstimate[i - 4])
-        testLabels.append(y[i - 4])
+
 
     print("Input the classifier you want to train (RVM / SVM / GPR) :")
     Parameters = input().upper()
-    res = TrainMyClassifier(xe, testData, Parameters, yy)
+    #res = TrainMyClassifier(xe, testData, Parameters, yy)
     MyCrossValidate(xe, 5, yy)
-    z= [[random() for _ in range(30)] for _ in range(200)]
-    for c in z:
-        testData.append(c)
-        testLabels.append(6)
+    #z= [[random() for _ in range(30)] for _ in range(200)]
+    #for c in z:
+    #    testData.append(c)
+    #    testLabels.append(6)
 
-    l = MyConfusionMatrix(TestMyClassifier(testData, Parameters, res)," ",testLabels)
-    np.savetxt(Parameters + "ConfusionMatrix.csv", l[0],delimiter = ",")
-    np.savetxt(Parameters + "Accuracy.csv", (l[1],),delimiter = ",")
+    #l = MyConfusionMatrix(TestMyClassifier(testData, Parameters, res)," ",testLabels)
+    #np.savetxt(Parameters + "ConfusionMatrix.csv", l[0],delimiter = ",")
+    #np.savetxt(Parameters + "Accuracy.csv", (l[1],),delimiter = ",")
