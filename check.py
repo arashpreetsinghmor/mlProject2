@@ -2,19 +2,22 @@ from sklearn import svm
 import numpy as np
 from scipy.io import loadmat
 from sklearn.svm import SVC
+from sklearn.svm import OneClassSVM
 from RVM import RVC
-from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.gaussian_process import GaussianProcessClassifier, GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.decomposition import PCA
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 from sklearn.model_selection import KFold
-from random import shuffle
+from random import shuffle, random, randint
 global Parameters
 global numClasses
 global clf
 import sys
+import collections
+
 Params={
     'SVM':{
         'gamma' : [1]
@@ -84,9 +87,9 @@ def RVMTraining(XEstimate,XValidate,Parameters,class_labels):
 def GPRTraining(XEstimate,XValidate,Parameters,class_labels):
     kernel = RBF(length_scale=1.0, length_scale_bounds=(1e-05, 100000.0))
     #clf = GaussianProcessClassifier(kernel=kernel, n_restarts_optimizer=1)
-    clf = GaussianProcessClassifier(kernel= RBF(length_scale=1.0), optimizer=None,
-                                       multi_class='one_vs_one', n_jobs=1)
-
+    #clf = GaussianProcessRegressor(kernel= RBF(length_scale=1.0), optimizer=None)
+    kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-2, 1e2))
+    clf = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=1)
     clf.fit(XEstimate, class_labels)
     Yvalidate = clf.predict(XValidate)
     EstParameters = clf.get_params()
@@ -156,16 +159,22 @@ def TrainMyClassifier(XEstimate,XValidate,Parameters,class_labels):
         print("invalid input")
         sys.exit()
 
+def outlierDetection(Xtrain, Xtest):
+    outlierDetector = OneClassSVM(kernel='rbf', gamma = 0.1, nu = 0.001)
+    outlierDetector.fit(Xtrain)
+    return outlierDetector.predict(Xtest)
     
 
 if __name__ == '__main__':
     x=loadmat("Proj2FeatVecsSet1.mat")["Proj2FeatVecsSet1"]
     y=PreProcessing("Proj2TargetOutputsSet1.mat")
+
+    
     c = list(zip(x, y))
     shuffle(c)
     x, y = zip(*c)
     y = np.asarray(y)
-    pca = PCA(n_components=10)
+    pca = PCA(n_components=30)
     reduced_XEstimate = pca.fit_transform(x)
     l=[]
     t= []
@@ -186,5 +195,9 @@ if __name__ == '__main__':
     Parameters =  input().upper()
     res = TrainMyClassifier(xe, testData, Parameters ,yy)
     MyCrossValidate(xe, 5, yy)
-    a = [[10]*60]
+    z= [[random() for _ in range(30)] for _ in range(20)]
+    for c in xe:
+        z.append(c)
+    #l = outlierDetection(xe, testData)
+    #print(collections.Counter(l))
     print(TestMyClassifier(pca.transform(a),Parameters,res["clf"]))
