@@ -11,7 +11,7 @@ from sklearn.decomposition import PCA
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 from sklearn.model_selection import KFold
 from random import shuffle, random, randint
-from math import exp
+
 from sklearn.svm import OneClassSVM
 global Parameters
 global numClasses
@@ -146,9 +146,9 @@ def TuneMyClassifier(Parameters, X_train, X_test, y_train, y_test):
 
     elif Parameters == "RVM":
         best_alpha, best_beta, max_accuracy = 0, 0, 0
-        for i in range(-7, 3):
-            for j in range(-7,3):
-                alpha, beta = exp(i), exp(j)
+        for i in range(-10, 2):
+            for j in range(-10,2):
+                alpha, beta = 10**i, 10**j
                 Params[Parameters]['alpha'] = [alpha]
                 Params[Parameters]['beta'] = [beta]
                 temp = RVMTraining(X_train_subset, X_test_subset, Params[Parameters], y_train_subset)
