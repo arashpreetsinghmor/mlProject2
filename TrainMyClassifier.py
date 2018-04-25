@@ -35,6 +35,8 @@ def PreProcessing(file_name):
             if target[i][j] == 1:
                 y.append(j+1)
 
+    y = np.asarray(y)
+
     return y
 
 def SVMTraining(XEstimate,XValidate,Parameters,class_labels):
@@ -91,7 +93,7 @@ def GPRTraining(XEstimate,XValidate,Parameters,class_labels):
 if __name__ == '__main__':
     x=loadmat("Proj2FeatVecsSet1.mat")["Proj2FeatVecsSet1"]
     y=PreProcessing("Proj2TargetOutputsSet1.mat")
-    y = np.asarray(y)
+
     pca = PCA(n_components=10)
     reduced_XEstimate = pca.fit_transform(x)
     l=[]

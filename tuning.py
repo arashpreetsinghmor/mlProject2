@@ -37,25 +37,17 @@ Params = {
 
 def PreProcessing(file_name):
     target = loadmat(file_name)["Proj2TargetOutputsSet1"]
-    number_labels = []
-    for ars in target:
-        if np.all(ars == [1, -1, -1, -1, -1]):
-            ars = 1
-            number_labels.append(ars)
-        elif np.all(ars == [-1, 1, -1, -1, -1]):
-            ars = 2
-            number_labels.append(ars)
-        elif np.all(ars == [-1, -1, 1, -1, -1]):
-            ars = 3
-            number_labels.append(ars)
-        elif np.all(ars == [-1, -1, -1, 1, -1]):
-            ars = 4
-            number_labels.append(ars)
-        elif np.all(ars == [-1, -1, -1, -1, 1]):
-            ars = 5
-            number_labels.append(ars)
+    m = len(target)
+    n = len(target[0])
+    y = []
+    for i in xrange(m):
+        for j in xrange(n):
+            if target[i][j] == 1:
+                y.append(j + 1)
 
-    return np.asarray(number_labels)
+    y = np.asarray(y)
+
+    return y
 
 
 def SVMTraining(XEstimate, XValidate, Parameters, class_labels):
