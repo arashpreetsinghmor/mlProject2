@@ -60,10 +60,6 @@ def SVMTraining(XEstimate, XValidate, Parameters, class_labels):
 
     EstParameters = clf.get_params()
 
-    mini = 1
-    for i in clf.predict_proba(XValidate):
-        mini = min(max(i), mini)
-    print(mini)
     return {"Yvalidate": Yvalidate,
             "EstParameters": EstParameters,
             "clf": clf}
@@ -182,7 +178,7 @@ def TuneMyClassifier(Parameters, X_train, X_test, y_train, y_test):
     doPrint = 1
 
 def MyConfusionMatrix(predictedLabels, ClassNames, actualLabels):
-    matrix = np.zeros([5, 5], dtype=int)
+    matrix = np.zeros([np.unique(actualLabels).size, np.unique(actualLabels).size], dtype=int)
     correctHits = 0
     for i in range(len(actualLabels)):
         matrix[actualLabels[i] - 1][predictedLabels[i] - 1] += 1
@@ -241,7 +237,7 @@ if __name__ == '__main__':
     l = []
     t = []
 
-    for x in range(1, 25000, 10):
+    for x in range(4, 25000, 10):
         l.append(x)
     xe = []
     yy = []
@@ -253,13 +249,22 @@ if __name__ == '__main__':
         yy.append(y[i])
         testData.append(reduced_XEstimate[i - 1])
         testLabels.append(y[i - 1])
+        testData.append(reduced_XEstimate[i - 2])
+        testLabels.append(y[i - 2])
+        testData.append(reduced_XEstimate[i - 3])
+        testLabels.append(y[i - 3])
+        testData.append(reduced_XEstimate[i - 4])
+        testLabels.append(y[i - 4])
 
     print("Input the classifier you want to train (RVM / SVM / GPR) :")
     Parameters = input().upper()
     res = TrainMyClassifier(xe, testData, Parameters, yy)
     MyCrossValidate(xe, 5, yy)
-    z= [[random() for _ in range(30)] for _ in range(20)]
-    for c in xe:
-        z.append(c)
+    z= [[random() for _ in range(30)] for _ in range(200)]
+    for c in z:
+        testData.append(c)
+        testLabels.append(6)
 
-    print(Counter(TestMyClassifier(z, Parameters, res)))
+    l = MyConfusionMatrix(TestMyClassifier(testData, Parameters, res)," ",testLabels)
+    np.savetxt(Parameters + "ConfusionMatrix.csv", l[0],delimiter = ",")
+    np.savetxt(Parameters + "Accuracy.csv", (l[1],),delimiter = ",")
