@@ -20,7 +20,10 @@ global tuningSize
 import sys
 from collections import Counter
 
+#parameter used to print confusion matrix only during cross validation, not parameter tuning
 doPrint = 1
+
+#dictionary for hyper parameters
 Params = {
     'SVM': {
         'gamma': [1]
@@ -34,7 +37,7 @@ Params = {
     }
 }
 
-
+# inferring class labels from the target outputs
 def PreProcessing(file_name):
     target = loadmat(file_name)["Proj2TargetOutputsSet1"]
     m = len(target)
@@ -49,7 +52,7 @@ def PreProcessing(file_name):
 
     return y
 
-
+# Classification via SVM
 def SVMTraining(XEstimate, XValidate, Parameters, class_labels):
     svcClassifier = SVC(kernel='rbf', probability=True)
     gridSearcher = GridSearchCV(svcClassifier, Parameters)
@@ -68,7 +71,7 @@ def SVMTraining(XEstimate, XValidate, Parameters, class_labels):
             "EstParameters": EstParameters,
             "clf": clf}
 
-
+# Classification via RVM
 def RVMTraining(XEstimate, XValidate, Parameters, class_labels):
     clf = OneVsOneClassifier(GridSearchCV(RVC(kernel='rbf', n_iter=1), Parameters))
     clf.fit(XEstimate, class_labels)
@@ -78,7 +81,7 @@ def RVMTraining(XEstimate, XValidate, Parameters, class_labels):
             "EstParameters": EstParameters,
             "clf": clf}
 
-
+# Classification via GPR
 def GPRTraining(XEstimate, XValidate, Parameters, class_labels):
     kernel = RBF(length_scale=1.0, length_scale_bounds=(1e-05, 100000.0))
     # clf = GaussianProcessClassifier(kernel=kernel, n_restarts_optimizer=1)
@@ -93,10 +96,11 @@ def GPRTraining(XEstimate, XValidate, Parameters, class_labels):
             "EstParameters": EstParameters,
             "clf": clf}
 
-
+# cross validation with provided training set
 def MyCrossValidate(XTrain, Nf, ClassLabels):
     XTrain = np.asarray(XTrain)
     ClassLabels = np.asarray(ClassLabels)
+    
     kf = KFold(n_splits=Nf)
 
     ConfMatrix = np.zeros([5, 5], dtype=float)
@@ -105,7 +109,8 @@ def MyCrossValidate(XTrain, Nf, ClassLabels):
 
         X_train, X_test = XTrain[train_index], XTrain[test_index]
         y_train, y_test = ClassLabels[train_index], ClassLabels[test_index]
-
+        
+        #tune hyper parameters on small subset of estimation set
         TuneMyClassifier(Parameters, X_train, X_test, y_train, y_test)
 
         if Parameters == "SVM":
@@ -181,6 +186,7 @@ def TuneMyClassifier(Parameters, X_train, X_test, y_train, y_test):
         #print('best length scale: ', best_length_scale)
     doPrint = 1
 
+# Compute confusion matrix using actual labels and predicted labels
 def MyConfusionMatrix(predictedLabels, ClassNames, actualLabels):
     matrix = np.zeros([5, 5], dtype=int)
     correctHits = 0
@@ -198,7 +204,6 @@ def MyConfusionMatrix(predictedLabels, ClassNames, actualLabels):
 
     return (confusion_matrix2, correctHits / len(actualLabels))
 
-
 def TestMyClassifier(XTest, Parameters, EstParameters):
     Ytest = EstParameters["clf"].predict(XTest)
     outliers = EstParameters["outlierDetector"].predict(XTest)
@@ -207,6 +212,7 @@ def TestMyClassifier(XTest, Parameters, EstParameters):
             Ytest[i] = 6
     return Ytest
 
+# compute outliers if any
 def outlierDetection(Xtrain, Xtest):
     outlierDetector = OneClassSVM(kernel='rbf', gamma = 0.1, nu = 0.001)
     outlierDetector.fit(Xtrain)
