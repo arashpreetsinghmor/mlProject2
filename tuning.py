@@ -40,8 +40,8 @@ def PreProcessing(file_name):
     m = len(target)
     n = len(target[0])
     y = []
-    for i in xrange(m):
-        for j in xrange(n):
+    for i in range(m):
+        for j in range(n):
             if target[i][j] == 1:
                 y.append(j + 1)
 
@@ -82,7 +82,7 @@ def RVMTraining(XEstimate, XValidate, Parameters, class_labels):
 def GPRTraining(XEstimate, XValidate, Parameters, class_labels):
     kernel = RBF(length_scale=1.0, length_scale_bounds=(1e-05, 100000.0))
     # clf = GaussianProcessClassifier(kernel=kernel, n_restarts_optimizer=1)
-    clf = GaussianProcessClassifier(kernel=RBF(length_scale=1.0), optimizer=None,
+    clf = GaussianProcessClassifier(kernel=RBF(length_scale=Parameters['length_scale']), optimizer=None,
                                     multi_class='one_vs_one', n_jobs=1)
 
     clf.fit(XEstimate, class_labels)
@@ -165,14 +165,17 @@ def TuneMyClassifier(Parameters, X_train, X_test, y_train, y_test):
     elif Parameters == "GPR":
         best_length_scale = 0
         max_accuracy = 0
-        for i in range(-2, 12):
+        i = 0.1
+        while i <= 2:
             Params[Parameters]['length_scale'] = [i]
             temp = GPRTraining(X_train_subset, X_test_subset, Params[Parameters], y_train_subset)
+
             temp_confusion_matrix = MyConfusionMatrix(temp["Yvalidate"], " ", y_test_subset)
-            print(np.mean(np.diagonal(temp_confusion_matrix[0])))
+            #print(np.mean(np.diagonal(temp_confusion_matrix[0])))
             if max_accuracy < np.mean(np.diagonal(temp_confusion_matrix[0])):
                 best_length_scale = i
                 max_accuracy = np.mean(np.diagonal(temp_confusion_matrix[0]))
+            i += 0.1
 
         Params[Parameters]['length_scale'] = [best_length_scale]
         #print('best length scale: ', best_length_scale)
@@ -229,7 +232,6 @@ def TrainMyClassifier(XEstimate, XValidate, Parameters, class_labels):
 if __name__ == '__main__':
     x = loadmat("Proj2FeatVecsSet1.mat")["Proj2FeatVecsSet1"]
     y = PreProcessing("Proj2TargetOutputsSet1.mat")
-    #print(x[5001])
     c = list(zip(x, y))
     shuffle(c)
     x, y = zip(*c)
@@ -238,6 +240,7 @@ if __name__ == '__main__':
     reduced_XEstimate = pca.fit_transform(x)
     l = []
     t = []
+
     for x in range(1, 25000, 10):
         l.append(x)
     xe = []
