@@ -14,6 +14,7 @@ from random import shuffle
 global Parameters
 global numClasses
 global clf
+import sys
 Params={
     'SVM':{
         'gamma' : [1]
@@ -151,6 +152,10 @@ def TrainMyClassifier(XEstimate,XValidate,Parameters,class_labels):
         return RVMTraining(XEstimate,XValidate,Params[Parameters],class_labels)
     elif Parameters == "GPR":
         return GPRTraining(XEstimate,XValidate,Params[Parameters],class_labels)
+    else:
+        print("invalid input")
+        sys.exit()
+
     
 
 if __name__ == '__main__':
@@ -178,7 +183,8 @@ if __name__ == '__main__':
         testLabels.append(y[i-1])
 
     print("Input the classifier you want to train (RVM / SVM / GPR) :")
-    Parameters =  input()
+    Parameters =  input().upper()
     res = TrainMyClassifier(xe, testData, Parameters ,yy)
     MyCrossValidate(xe, 5, yy)
+    a = [[10]*60]
     print(TestMyClassifier(pca.transform(a),Parameters,res["clf"]))
