@@ -56,7 +56,7 @@ def PreProcessing(file_name):
 def SVMTraining(XEstimate, XValidate, Parameters, class_labels):
     svcClassifier = SVC(kernel='rbf', probability=True)
     gridSearcher = GridSearchCV(svcClassifier, Parameters)
-    clf = OneVsRestClassifier(gridSearcher)
+    clf = OneVsOneClassifier(gridSearcher)
 
     clf.fit(XEstimate, class_labels)
     Yvalidate = clf.predict(XValidate)
