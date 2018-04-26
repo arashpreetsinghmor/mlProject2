@@ -69,7 +69,7 @@ def SVMTraining(XEstimate, XValidate, Parameters, class_labels):
 
 # Classification via RVM
 def RVMTraining(XEstimate, XValidate, Parameters, class_labels):
-    clf = OneVsOneClassifier(GridSearchCV(RVC(kernel='rbf', n_iter=1), Parameters))
+    clf = OneVsOneClassifier(GridSearchCV(RVC(kernel='rbf', n_iter=2), Parameters))
     clf.fit(XEstimate, class_labels)
     Yvalidate = clf.predict(XValidate)
     EstParameters = clf.get_params()
@@ -255,12 +255,13 @@ if __name__ == '__main__':
     shuffle(c)
     x, y = zip(*c)
     y = np.asarray(y)
-    pca = PCA(n_components=30)
-    reduced_XEstimate = pca.fit_transform(x)
+    reduced_XEstimate = x
+    #pca = PCA(n_components=30)
+    #reduced_XEstimate = x#pca.fit_transform(x)
     l = []
     t = []
 
-    for x in range(4, 25000, 5):
+    for x in range(4, 25000, 10):
         l.append(x)
     xe = []
     yy = []
