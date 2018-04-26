@@ -121,16 +121,21 @@ def MyCrossValidate(XTrain, Nf, ClassLabels):
         ConfMatrix += l[2]
         print('accuracy: ' + str(l[1]))
     
+
+    
+    TruePositives = np.trace(ConfMatrix)
+
+    accuracy = TruePositives/len(XTrain)
+
     for i in range(len(ConfMatrix)):
         l = sum(ConfMatrix[i])
         if l != 0:
             for j in range(len(ConfMatrix[i])):
                 ConfMatrix[i][j] /= l
-    
-    TruePositives = np.trace(ConfMatrix)
-    accuracy = TruePositives/len(XTrain)
+
     np.savetxt(Parameters + "ConfusionMatrix.csv", ConfMatrix, delimiter = ",")
     np.savetxt(Parameters + "Accuracy.csv", (accuracy,), delimiter = ",")
+    print("Final Accuracy:" , accuracy)
     print(ConfMatrix)
 
 #Tunes the parameters of the classifier for a small data set and sets them to be used by cross validation
@@ -202,7 +207,7 @@ def MyConfusionMatrix(predictedLabels, ClassNames, actualLabels):
         if actualLabels[i] == predictedLabels[i]:
             correctHits += 1
 
-    confusion_matrix = matrix[:][:]
+    confusion_matrix = np.copy(matrix)
     
     for i in range(len(matrix)):
         l = sum(matrix[i])
@@ -210,11 +215,9 @@ def MyConfusionMatrix(predictedLabels, ClassNames, actualLabels):
             for j in range(len(matrix[i])):
                 matrix[i][j] /= l
 
-    #confusion_matrix2 = matrix / matrix.sum(axis=1)[:, None]
 
     if doPrint==1:
         print(matrix)
-
     return (matrix, correctHits / len(actualLabels), confusion_matrix)
 
 def TestMyClassifier(XTest, Parameters, EstParameters):
@@ -261,7 +264,7 @@ if __name__ == '__main__':
     l = []
     t = []
 
-    for x in range(4, 25000, 10):
+    for x in range(4, 25000, 5):
         l.append(x)
     xe = []
     yy = []
